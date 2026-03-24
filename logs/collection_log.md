@@ -124,6 +124,48 @@
 
 ---
 
+## Schritt 9: Weitere Post-Erfassung (24. März 2026)
+- **Zeit:** 2026-03-24 12:10:00 - 12:20:00 UTC-04:00  
+- **Navigation:** Einzelne Posts geöffnet, Screenshots erstellt, MD-Dateien angelegt
+- **Beobachtungen:**
+  - Post DJUPu6vs4QY (Gentleman Kirchentage 2025): 19 Likes, keine Kommentare, @-Mentions: @gentleman_official, @hannoverwaltung, @haz.de, @kirchentag, @helfenbeimkirchentag
+  - Post C8eI-R8Iolc (Norddeutsche Meisterschaft): 31 Likes, 1 Kommentar (bboy_enko), @-Mentions: @streetdancefactory, Tanzschulen in Kiel/Lübeck
+  - Post C7gEOCYozBR (Zirkus Charles Knie): 24 Likes, keine Kommentare, @-Mentions: @charleskniezirkus, @zirkus_charles_knie, Kiel-Accounts
+  - Post C2VqrEoIW7h (Bloxx Box): 32 Likes, 1 Kommentar (mrbloxx), @-Mentions: @mrbloxx, @bloxxliebe, @lego
+  - Post C2VomNhIE7r (On Fire Battle): 35 Likes, 1 Kommentar (b0bby_balb0a_m4b), @-Mentions: @b0bby_balb0a_m4b, @onfirebattle, @bob.thedesigner
+  - Post Cyv0QU8ImAz (Schoolyard Breaks Jam): 51 Likes, 1 Kommentar (findickjut.de), @-Mentions: @schoolyardbreaksjam, @mathias_bboybrudo, @khankid7, @kid_cut
+- **Artefakte:**
+  - posts/post_DJUPu6vs4QY.md
+  - posts/post_C8eI-R8Iolc.md
+  - posts/post_C7gEOCYozBR.md
+  - posts/post_C2VqrEoIW7h.md
+  - posts/post_C2VomNhIE7r.md
+  - posts/post_Cyv0QU8ImAz.md
+  - Screenshots gemäß Namensschema in artifacts/screenshots/
+- **Hashes:** [nachträglich eintragen]
+
+---
+
+## Schritt 10: Connected Users – Follower/Following-Daten (24. März 2026)
+- **Zeit:** 2026-03-24 12:25:00 - 12:45:00 UTC-04:00  
+- **Navigation:** Einzelne Profile der erwähnten @-Accounts geöffnet, öffentliche Metadaten erfasst
+- **Beobachtungen (Auswahl mit >1.000 Followern):**
+  - @lego: 12,7 Mio. Follower, 916 Following, 6.039 Posts (Verifiziert, Unternehmen)
+  - @gentleman_official: 226.000 Follower, 741 Following, 1.029 Posts (Verifiziert, Künstler/in)
+  - @streetdancefactory: 9.868 Follower, 1.197 Following, 618 Posts (Sport und Freizeit)
+  - @mrbloxx: 2.394 Follower, 533 Following, 163 Posts (Rapper/in)
+  - @spaceone70: 1.250 Follower, 1.466 Following, 158 Posts (Breakdance)
+  - @push_it_htown: 1.201 Follower, 519 Following, 879 Posts (Community)
+  - @hiphopcommunity96: 1.041 Follower, 2.406 Following, 169 Posts (Verein)
+  - @schoolyardbreaksjam: 811 Follower, 2.374 Following, 126 Posts (Breaking Event)
+  - @onfirebattle: 96 Follower, 80 Following, 31 Posts (Breaking Battle)
+- **Artefakte:**
+  - logs/connected_users_detailed.md (Sortierung nach Followers & Following)
+  - Screenshots gemäß Namensschema
+- **Hashes:** [nachträglich eintragen]
+
+---
+
 ## Abschluss
 - **Endzeit:** 2026-03-23 22:33:10 UTC-04:00  
 - **Offene Fragen:**
