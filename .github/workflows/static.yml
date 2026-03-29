@@ -31,6 +31,29 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Debug - List repository contents
+        run: |
+          echo "=== Repository Root ==="
+          ls -la
+          echo ""
+          echo "=== Checking for index.html ==="
+          if [ -f index.html ]; then
+            echo "✓ index.html found"
+            head -5 index.html
+          else
+            echo "✗ index.html NOT found"
+          fi
+          echo ""
+          echo "=== Checking .nojekyll ==="
+          if [ -f .nojekyll ]; then
+            echo "✓ .nojekyll found (Jekyll disabled)"
+          else
+            echo "✗ .nojekyll NOT found"
+          fi
+          echo ""
+          echo "=== Artifacts directory ==="
+          ls -la artifacts/ 2>/dev/null || echo "artifacts/ directory not found"
+
       - name: Verify index.html exists
         run: |
           if [ ! -f index.html ]; then
@@ -43,12 +66,14 @@ jobs:
         uses: actions/configure-pages@v5
         with:
           static_site_generator: disable
+          enablement: true
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           # Upload entire repository including screenshots and index.html
           path: '.'
+          retention-days: 1
 
       - name: Deploy to GitHub Pages
         id: deployment
