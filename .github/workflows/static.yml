@@ -1,5 +1,5 @@
 # Simple workflow for deploying static content to GitHub Pages
-name: Deploy Gallery to Pages
+name: Deploy to GitHub Pages (Branch Mode)
 
 on:
   push:
@@ -7,42 +7,23 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  contents: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout main
         uses: actions/checkout@v4
-
-      - name: List files
-        run: |
-          echo "=== Repository contents ==="
-          ls -la
-          echo ""
-          echo "=== Screenshots ==="
-          ls -la artifacts/screenshots/ | head -10
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
         with:
-          static_site_generator: disable
+          path: main
 
-      - name: Upload Pages Artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          path: .
-
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
-        with:
-          artifact_name: github-pages
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./main
+          publish_branch: gh-pages
+          force_orphan: false
+          enable_jekyll: false
 
