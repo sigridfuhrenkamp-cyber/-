@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Screenshot Gallery</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f0f0f;
+            --bg-secondary: #1a1a1a;
+            --bg-card: #252525;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --border: #333333;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stats {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Gallery Grid */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        @media (min-width: 1200px) {
+            .gallery {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .gallery {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 1rem;
+            }
+        }
+
+        /* Gallery Item */
+        .gallery-item {
+            position: relative;
+            aspect-ratio: 4/3;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-color: var(--accent);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+
+        .gallery-item::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .gallery-item:hover::after {
+            opacity: 1;
+        }
+
+        .item-title {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            z-index: 2;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .gallery-item:hover .item-title {
+            transform: translateY(0);
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            padding: 2rem 0;
+        }
+
+        .pagination button {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            min-width: 40px;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .pagination button.active {
+            background: var(--accent);
+            border-color: var(--accent);
+            font-weight: 600;
+        }
+
+        .pagination-info {
+            color: var(--text-secondary);
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+        }
+
+        /* Lightbox */
+        .lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .lightbox.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .lightbox-content {
+            position: relative;
+            max-width: 95vw;
+            max-height: 95vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .lightbox img {
+            max-width: 100%;
+            max-height: 85vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .lightbox-caption {
+            margin-top: 1rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            text-align: center;
+            max-width: 800px;
+            padding: 0 1rem;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .lightbox-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .lightbox-nav:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .lightbox-prev {
+            left: -70px;
+        }
+
+        .lightbox-next {
+            right: -70px;
+        }
+
+        @media (max-width: 900px) {
+            .lightbox-prev {
+                left: 10px;
+            }
+            .lightbox-next {
+                right: 10px;
+            }
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Screenshot Gallery</h1>
+            <div class="stats" id="stats">Loading...</div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading screenshots...</p>
+        </div>
+
+        <div id="gallery" class="gallery" style="display: none;"></div>
+
+        <div id="empty" class="empty-state" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <path d="M21 15l-5-5L5 21"/>
+            </svg>
+            <p>No screenshots found</p>
+        </div>
+
+        <div id="pagination" class="pagination" style="display: none;"></div>
+    </main>
+
+    <!-- Lightbox -->
+    <div id="lightbox" class="lightbox">
+        <div class="lightbox-content">
+            <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+            <button class="lightbox-nav lightbox-prev" onclick="navigateLightbox(-1)">&#8249;</button>
+            <button class="lightbox-nav lightbox-next" onclick="navigateLightbox(1)">&#8250;</button>
+            <img id="lightbox-img" src="" alt="">
+            <p id="lightbox-caption" class="lightbox-caption"></p>
+        </div>
+    </div>
+
+    <script>
+        const ITEMS_PER_PAGE = 12;
+        let currentPage = 1;
+        let images = [];
+        let currentImageIndex = 0;
+
+        // Screenshot data - will be populated from the artifacts/screenshots folder
+        const screenshotFiles = [
+            "2020_ai_video-by_Tom_Rohrböck_Group.png",
+            "2020_ai_video_by_Naomi_Seibt_makers.png",
+            "2021_AI_flowers-very_good_work!.png",
+            "2022_AI_VIdeo..........png",
+            "AI.png",
+            "Account_Bio.png",
+            "Account_Info.png",
+            "Bloxx_Deepfake.png",
+            "Bruder_von_tomatolix_Kuchen_TV_und_Marvin_Wildhage.png",
+            "DEEP_FAKE_OF_JENNIFER_K.png",
+            "EARLY_2025_AI_Video-not_distinguishable!!!.png",
+            "Flying_Tigers_oder_was.png",
+            "Fully_AI_generated_video_in_2019.png",
+            "I_KNOW_YOU!.png",
+            "Jayden_S.png",
+            "Jenquiz_Crash.png",
+            "KI-Elite_is_no_joke-they_are!.png",
+            "Markiert.png",
+            "Mid_2025_AI_Video.png",
+            "Oh_lol_Mr.Bloxx_is_here_(I_knew_before_because_I_know_all_about_this_terrorists!).png",
+            "Only_small_2021_AI_error_in_video-ACAC_and_not_ACAB.png",
+            "Screenshot 2026-03-23 231537.png",
+            "Screenshot 2026-03-23 231604.png",
+            "Screenshot 2026-03-23 231654.png",
+            "Screenshot 2026-03-23 231711.png",
+            "Screenshot 2026-03-23 231726.png",
+            "Screenshot 2026-03-23 231740.png",
+            "Screenshot 2026-03-23 231754.png",
+            "Screenshot 2026-03-23 231811.png",
+            "Screenshot 2026-03-23 231826.png",
+            "Screenshot 2026-03-23 231839.png",
+            "Screenshot 2026-03-23 231851.png",
+            "Screenshot 2026-03-23 231910.png",
+            "Screenshot 2026-03-23 231934.png",
+            "Screenshot 2026-03-23 231946.png",
+            "Screenshot 2026-03-23 232005.png",
+            "Screenshot 2026-03-23 232022.png",
+            "Screenshot 2026-03-23 232038.png",
+            "Screenshot 2026-03-23 232051.png",
+            "Screenshot 2026-03-23 232103.png",
+            "Screenshot 2026-03-23 232116.png",
+            "Screenshot 2026-03-23 232128.png",
+            "Screenshot 2026-03-23 232141.png",
+            "Screenshot 2026-03-23 232153.png",
+            "Screenshot 2026-03-23 232212.png",
+            "Screenshot 2026-03-23 232225.png",
+            "Screenshot 2026-03-23 232236.png",
+            "Screenshot 2026-03-23 232248.png",
+            "Screenshot 2026-03-23 232306.png",
+            "Screenshot 2026-03-23 232405.png",
+            "Screenshot 2026-03-23 232419.png",
+            "Screenshot 2026-03-23 232431.png",
+            "Screenshot 2026-03-23 232442.png",
+            "Screenshot 2026-03-23 232455.png",
+            "Screenshot 2026-03-23 232507.png",
+            "Screenshot 2026-03-23 232521.png",
+            "Screenshot 2026-03-23 232536.png",
+            "Screenshot 2026-03-23 232550.png",
+            "Screenshot 2026-03-23 232602.png",
+            "Screenshot 2026-03-23 232614.png",
+            "Screenshot 2026-03-23 232626.png",
+            "Screenshot 2026-03-23 232639.png",
+            "Screenshot 2026-03-23 232656.png",
+            "Screenshot 2026-03-23 232709.png",
+            "Screenshot 2026-03-23 232721.png",
+            "Screenshot 2026-03-23 232736.png",
+            "Screenshot 2026-03-23 232749.png",
+            "Screenshot 2026-03-23 232802.png",
+            "Screenshot 2026-03-23 232814.png",
+            "Screenshot 2026-03-23 232826.png",
+            "Screenshot 2026-03-23 232841.png",
+            "Screenshot 2026-03-23 232854.png",
+            "Screenshot 2026-03-23 232911.png",
+            "Screenshot 2026-03-23 232924.png",
+            "Screenshot 2026-03-23 232939.png",
+            "Screenshot 2026-03-23 232955.png",
+            "Screenshot 2026-03-23 233009.png",
+            "Screenshot 2026-03-23 233021.png",
+            "Screenshot 2026-03-23 233034.png",
+            "Screenshot 2026-03-23 233050.png",
+            "Screenshot 2026-03-23 233101.png",
+            "Screenshot 2026-03-23 233113.png",
+            "Screenshot 2026-03-23 233136.png",
+            "Screenshot 2026-03-23 233149.png",
+            "Screenshot 2026-03-23 233201.png",
+            "Screenshot 2026-03-23 233212.png",
+            "Screenshot 2026-03-23 233227.png",
+            "Screenshot 2026-03-23 233241.png",
+            "Screenshot 2026-03-23 233258.png",
+            "Screenshot 2026-03-23 233310.png",
+            "Screenshot 2026-03-23 233322.png",
+            "Screenshot 2026-03-23 233339.png",
+            "Screenshot 2026-03-23 233358.png",
+            "Screenshot 2026-03-23 233410.png",
+            "Screenshot 2026-03-23 233424.png",
+            "Screenshot 2026-03-23 233447.png",
+            "Screenshot 2026-03-23 233500.png",
+            "Screenshot 2026-03-23 233512.png",
+            "Screenshot 2026-03-23 233524.png",
+            "Screenshot 2026-03-23 233537.png",
+            "Screenshot 2026-03-23 233550.png",
+            "Screenshot 2026-03-23 233604.png",
+            "Screenshot 2026-03-23 233618.png",
+            "Screenshot 2026-03-23 233634.png",
+            "Screenshot 2026-03-23 233645.png",
+            "Screenshot 2026-03-23 233658.png",
+            "Screenshot 2026-03-23 233710.png",
+            "Screenshot 2026-03-23 233721.png",
+            "Screenshot 2026-03-23 233734.png",
+            "Screenshot 2026-03-23 233746.png",
+            "Screenshot 2026-03-23 233800.png",
+            "Screenshot 2026-03-23 233813.png",
+            "Screenshot 2026-03-23 233825.png",
+            "Screenshot 2026-03-23 233838.png",
+            "Screenshot 2026-03-23 233850.png",
+            "Screenshot 2026-03-23 233905.png",
+            "Screenshot 2026-03-23 233917.png",
+            "Screenshot 2026-03-23 233946.png",
+            "Screenshot 2026-03-23 233959.png",
+            "Screenshot 2026-03-23 234011.png",
+            "Screenshot 2026-03-23 234022.png",
+            "Screenshot 2026-03-23 234033.png",
+            "Screenshot 2026-03-23 234044.png",
+            "Screenshot 2026-03-23 234056.png",
+            "Screenshot 2026-03-23 234109.png",
+            "Screenshot 2026-03-23 234121.png",
+            "Screenshot 2026-03-23 234134.png",
+            "Screenshot 2026-03-23 234149.png",
+            "Screenshot 2026-03-23 234203.png",
+            "Screenshot 2026-03-23 234218.png",
+            "Screenshot 2026-03-23 234231.png",
+            "Screenshot 2026-03-23 234244.png",
+            "Screenshot 2026-03-23 234255.png",
+            "Screenshot 2026-03-23 234406.png",
+            "Screenshot 2026-03-23 234419.png",
+            "Screenshot 2026-03-23 234431.png",
+            "Screenshot 2026-03-23 234442.png",
+            "Screenshot 2026-03-23 234453.png",
+            "Screenshot 2026-03-23 234526.png",
+            "Screenshot 2026-03-23 234552.png",
+            "Screenshot 2026-03-23 234621.png",
+            "Screenshot 2026-03-23 234632.png",
+            "Screenshot 2026-03-23 234643.png",
+            "Screenshot 2026-03-23 234654.png",
+            "Screenshot 2026-03-23 234706.png",
+            "Screenshot 2026-03-23 234720.png",
+            "Screenshot 2026-03-23 234810.png",
+            "Screenshot 2026-03-23 234822.png",
+            "Screenshot 2026-03-23 234832.png",
+            "Screenshot 2026-03-23 234905.png",
+            "Screenshot 2026-03-23 234940.png",
+            "Screenshot 2026-03-23 234952.png",
+            "Screenshot 2026-03-23 235004.png",
+            "Screenshot 2026-03-23 235014.png",
+            "Screenshot 2026-03-23 235111.png",
+            "Screenshot 2026-03-23 235125.png",
+            "Screenshot 2026-03-23 235158.png",
+            "Screenshot 2026-03-23 235227.png",
+            "Screenshot 2026-03-23 235308.png",
+            "Screenshot 2026-03-23 235320.png",
+            "Screenshot 2026-03-23 235331.png",
+            "Screenshot 2026-03-23 235427.png",
+            "Screenshot 2026-03-23 235439.png",
+            "Screenshot 2026-03-23 235455.png",
+            "Screenshot 2026-03-23 235510.png",
+            "Screenshot 2026-03-23 235522.png",
+            "Screenshot 2026-03-23 235533.png",
+            "Screenshot 2026-03-23 235544.png",
+            "Screenshot 2026-03-23 235648.png",
+            "Screenshot 2026-03-23 235702.png",
+            "Screenshot 2026-03-23 235711.png",
+            "Screenshot 2026-03-23 235721.png",
+            "Screenshot 2026-03-23 235732.png",
+            "Screenshot 2026-03-23 235743.png",
+            "Screenshot 2026-03-23 235752.png",
+            "Screenshot 2026-03-23 235804.png",
+            "Screenshot 2026-03-23 235949.png",
+            "Screenshot 2026-03-24 000000.png",
+            "Screenshot 2026-03-24 000011.png",
+            "Screenshot 2026-03-24 000023.png",
+            "Screenshot 2026-03-24 000034.png",
+            "Screenshot 2026-03-24 000132.png",
+            "Screenshot 2026-03-24 000145.png",
+            "Screenshot 2026-03-24 000335.png",
+            "Screenshot 2026-03-24 000348.png",
+            "Screenshot 2026-03-24 000441.png",
+            "Screenshot 2026-03-24 000453.png",
+            "Screenshot 2026-03-24 000508.png",
+            "Screenshot 2026-03-24 000523.png",
+            "Screenshot 2026-03-24 000543.png",
+            "Screenshot 2026-03-24 000557.png",
+            "Screenshot 2026-03-24 000613.png",
+            "Screenshot 2026-03-24 000655.png",
+            "Screenshot 2026-03-24 000707.png",
+            "Screenshot 2026-03-24 000718.png",
+            "Screenshot 2026-03-24 000729.png",
+            "Screenshot 2026-03-24 000746.png",
+            "Screenshot 2026-03-24 000920.png",
+            "Screenshot 2026-03-24 000932.png",
+            "Screenshot 2026-03-24 000943.png",
+            "Screenshot 2026-03-24 000954.png",
+            "Screenshot 2026-03-24 001005.png",
+            "Screenshot 2026-03-24 001032.png",
+            "Screenshot 2026-03-24 001106.png",
+            "Screenshot 2026-03-24 001118.png",
+            "Screenshot 2026-03-24 001428.png",
+            "Screenshot 2026-03-24 001814.png",
+            "Screenshot 2026-03-24 001826.png",
+            "Screenshot 2026-03-24 001854.png",
+            "Screenshot 2026-03-24 002143.png",
+            "Screenshot 2026-03-24 002309.png",
+            "Screenshot 2026-03-24 002321.png",
+            "Screenshot 2026-03-24 002336.png",
+            "Screenshot 2026-03-24 002349.png",
+            "Screenshot 2026-03-24 002435.png",
+            "Screenshot 2026-03-24 002449.png",
+            "Screenshot 2026-03-24 002556.png",
+            "Screenshot 2026-03-24 002607.png",
+            "Screenshot 2026-03-24 002653.png",
+            "Screenshot 2026-03-24 002755.png",
+            "Screenshot 2026-03-24 002809.png",
+            "Screenshot 2026-03-24 002848.png",
+            "Screenshot 2026-03-24 002902.png",
+            "Screenshot 2026-03-24 002941.png",
+            "Screenshot 2026-03-24 003259.png",
+            "Screenshot 2026-03-24 003326.png",
+            "Screenshot 2026-03-24 003352.png",
+            "Screenshot 2026-03-24 003410.png",
+            "Screenshot 2026-03-24 003807.png",
+            "Shot_from_M9id_2023_AI_Video.png",
+            "Skepsiz.png",
+            "THIS_PIC_WILL_GET_VERY_IMPORTANT-TRUST_NO_1-Krijo-Stalka^^.png",
+            "This_is_Screenshot_from_2022_AI_Video.png",
+            "This_is_ai_shit-everything_from_this_user.png",
+            "Video-.png",
+            "Video-Screenshot 2026-03-23 233930.png",
+            "Video-Screenshot 2026-03-23 234307.png",
+            "Video-Screenshot 2026-03-23 234326.png",
+            "Video-Screenshot 2026-03-23 234351.png",
+            "Video-Screenshot 2026-03-23 234509.png",
+            "Video-Screenshot 2026-03-23 234537.png",
+            "Video-Screenshot 2026-03-23 234607.png",
+            "Video-Screenshot 2026-03-23 234733.png",
+            "Video-Screenshot 2026-03-23 235040.png",
+            "Video-Screenshot 2026-03-23 235057.png",
+            "Video-Screenshot 2026-03-23 235139.png",
+            "Video-Screenshot 2026-03-23 235211.png",
+            "Video-Screenshot 2026-03-23 235252.png",
+            "Video-Screenshot 2026-03-23 235557.png",
+            "Video-Screenshot 2026-03-23 235829.png",
+            "Video-Screenshot 2026-03-23 235931.png",
+            "Video-Screenshot 2026-03-24 000051.png",
+            "Video-Screenshot 2026-03-24 000402.png",
+            "Video-Screenshot 2026-03-24 000639.png",
+            "Video-Screenshot 2026-03-24 000758.png",
+            "Video-Screenshot 2026-03-24 000813.png",
+            "Video-Screenshot 2026-03-24 000829.png",
+            "Video-Screenshot 2026-03-24 000848.png",
+            "Video-Screenshot 2026-03-24 000906.png",
+            "Video-Screenshot 2026-03-24 001018.png",
+            "Video-Screenshot 2026-03-24 001053.png",
+            "Video-Screenshot 2026-03-24 001130.png",
+            "Video-Screenshot 2026-03-24 001149.png",
+            "Video-Screenshot 2026-03-24 001205.png",
+            "Video-Screenshot 2026-03-24 001221.png",
+            "Video-Screenshot 2026-03-24 001239.png",
+            "Video-Screenshot 2026-03-24 001254.png",
+            "Video-Screenshot 2026-03-24 001428.png",
+            "Video-Screenshot 2026-03-24 001451.png",
+            "Video-Screenshot 2026-03-24 001529.png",
+            "Video-Screenshot 2026-03-24 001546.png",
+            "Video-Screenshot 2026-03-24 001621.png",
+            "Video-Screenshot 2026-03-24 001637.png",
+            "Video-Screenshot 2026-03-24 001723.png",
+            "Video-Screenshot 2026-03-24 001739.png",
+            "Video-Screenshot 2026-03-24 001840.png",
+            "Video-Screenshot 2026-03-24 001921.png",
+            "Video-Screenshot 2026-03-24 001936.png",
+            "Video-Screenshot 2026-03-24 001951.png",
+            "Video-Screenshot 2026-03-24 002006.png",
+            "Video-Screenshot 2026-03-24 002021.png",
+            "Video-Screenshot 2026-03-24 002036.png",
+            "Video-Screenshot 2026-03-24 002051.png",
+            "Video-Screenshot 2026-03-24 002106.png",
+            "Video-Screenshot 2026-03-24 002123.png",
+            "Video-Screenshot 2026-03-24 002158.png",
+            "Video-Screenshot 2026-03-24 002214.png",
+            "Video-Screenshot 2026-03-24 002251.png",
+            "Video-Screenshot 2026-03-24 002421.png",
+            "Video-Screenshot 2026-03-24 002514.png",
+            "Video-Screenshot 2026-03-24 002527.png",
+            "Video-Screenshot 2026-03-24 002542.png",
+            "Video-Screenshot 2026-03-24 002620.png",
+            "Video-Screenshot 2026-03-24 002636.png",
+            "Video-Screenshot 2026-03-24 003014.png",
+            "Video-Screenshot 2026-03-24 003028.png",
+            "Video-Screenshot 2026-03-24 003042.png",
+            "Video-Screenshot 2026-03-24 003058.png",
+            "Video-Screenshot 2026-03-24 003133.png",
+            "Video-Screenshot 2026-03-24 003231.png",
+            "Video_Page_Overview-Screenshot 2026-03-24 003435.png",
+            "Video_Page_Overview-Screenshot 2026-03-24 003457.png",
+            "Video_Page_Overview-Screenshot 2026-03-24 003519.png",
+            "Video_Page_Overview-Screenshot 2026-03-24 003535.png",
+            "Video_Page_Overview-Screenshot 2026-03-24 003551.png",
+            "Video_Page_Overview-Screenshot 2026-03-24 003605.png",
+            "Video_Page_Overview-Screenshot 2026-03-24 003622.png",
+            "Video_Page_Overview-Screenshot 2026-03-24 003705.png",
+            "Video_Page_Overview-Screenshot 2026-03-24 003723.png",
+            "Why_they_have_NWO_masks-I_tell_you!.png",
+            "You_must_understand_this_is_AI-look_the_timestamp_of_insta_posting.png",
+            "pheno-lol.png",
+            "this_is_2020_ai_video_from_Kuchen_TV_Herr_Kuchen-AI_Terrorists!.png",
+            "tomatolix-auf-crack.png"
+        ];
+
+        function init() {
+            images = screenshotFiles.map(filename => ({
+                src: `artifacts/screenshots/${encodeURIComponent(filename)}`,
+                thumb: `artifacts/screenshots/${encodeURIComponent(filename)}`,
+                title: filename.replace(/\.png$/i, '').replace(/_/g, ' ')
+            }));
+
+            document.getElementById('loading').style.display = 'none';
+
+            if (images.length === 0) {
+                document.getElementById('empty').style.display = 'block';
+                return;
+            }
+
+            document.getElementById('gallery').style.display = 'grid';
+            document.getElementById('pagination').style.display = 'flex';
+            updateStats();
+            renderGallery();
+            renderPagination();
+        }
+
+        function updateStats() {
+            const total = images.length;
+            const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
+            document.getElementById('stats').textContent = `${total} screenshots • ${totalPages} pages`;
+        }
+
+        function renderGallery() {
+            const gallery = document.getElementById('gallery');
+            const start = (currentPage - 1) * ITEMS_PER_PAGE;
+            const end = Math.min(start + ITEMS_PER_PAGE, images.length);
+            const pageImages = images.slice(start, end);
+
+            gallery.innerHTML = pageImages.map((img, index) => `
+                <div class="gallery-item" onclick="openLightbox(${start + index})">
+                    <img src="${img.thumb}" alt="${img.title}" loading="lazy">
+                    <div class="item-title">${img.title}</div>
+                </div>
+            `).join('');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderPagination() {
+            const pagination = document.getElementById('pagination');
+            const totalPages = Math.ceil(images.length / ITEMS_PER_PAGE);
+
+            if (totalPages <= 1) {
+                pagination.style.display = 'none';
+                return;
+            }
+
+            let buttons = [];
+
+            // Previous button
+            buttons.push(`<button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>`);
+
+            // First page
+            if (currentPage > 3) {
+                buttons.push(`<button onclick="goToPage(1)">1</button>`);
+                if (currentPage > 4) {
+                    buttons.push(`<span class="pagination-info">...</span>`);
+                }
+            }
+
+            // Page numbers around current
+            for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+                buttons.push(`<button onclick="goToPage(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`);
+            }
+
+            // Last page
+            if (currentPage < totalPages - 2) {
+                if (currentPage < totalPages - 3) {
+                    buttons.push(`<span class="pagination-info">...</span>`);
+                }
+                buttons.push(`<button onclick="goToPage(${totalPages})">${totalPages}</button>`);
+            }
+
+            // Next button
+            buttons.push(`<button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>`);
+
+            // Info
+            buttons.push(`<span class="pagination-info">Page ${currentPage} of ${totalPages}</span>`);
+
+            pagination.innerHTML = buttons.join('');
+        }
+
+        function goToPage(page) {
+            const totalPages = Math.ceil(images.length / ITEMS_PER_PAGE);
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderGallery();
+            renderPagination();
+        }
+
+        function openLightbox(index) {
+            currentImageIndex = index;
+            updateLightbox();
+            document.getElementById('lightbox').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function updateLightbox() {
+            const img = images[currentImageIndex];
+            document.getElementById('lightbox-img').src = img.src;
+            document.getElementById('lightbox-caption').textContent = `${img.title} (${currentImageIndex + 1} of ${images.length})`;
+        }
+
+        function navigateLightbox(direction) {
+            currentImageIndex += direction;
+            if (currentImageIndex < 0) currentImageIndex = images.length - 1;
+            if (currentImageIndex >= images.length) currentImageIndex = 0;
+            updateLightbox();
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (!document.getElementById('lightbox').classList.contains('active')) return;
+
+            switch (e.key) {
+                case 'Escape':
+                    closeLightbox();
+                    break;
+                case 'ArrowLeft':
+                    navigateLightbox(-1);
+                    break;
+                case 'ArrowRight':
+                    navigateLightbox(1);
+                    break;
+            }
+        });
+
+        // Close lightbox when clicking outside
+        document.getElementById('lightbox').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                closeLightbox();
+            }
+        });
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 # Simple workflow for deploying static content to GitHub Pages
-name: Deploy static content to Pages
+name: Deploy Gallery to Pages
 
 on:
   # Runs on pushes targeting the default branch
@@ -16,13 +16,12 @@ permissions:
   id-token: write
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
+  # Build and deploy job
   deploy:
     environment:
       name: github-pages
@@ -31,13 +30,26 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Verify index.html exists
+        run: |
+          if [ ! -f index.html ]; then
+            echo "Error: index.html not found!"
+            exit 1
+          fi
+          echo "index.html found - ready for deployment"
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        with:
+          static_site_generator: disable
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
+          # Upload entire repository including screenshots and index.html
           path: '.'
+
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
