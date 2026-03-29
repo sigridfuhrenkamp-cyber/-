@@ -2,83 +2,47 @@
 name: Deploy Gallery to Pages
 
 on:
-  # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-env:
-  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
-
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  # Build and deploy job
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Debug - List repository contents
+      - name: List files
         run: |
-          echo "=== Repository Root ==="
+          echo "=== Repository contents ==="
           ls -la
           echo ""
-          echo "=== Checking for index.html ==="
-          if [ -f index.html ]; then
-            echo "✓ index.html found"
-            head -5 index.html
-          else
-            echo "✗ index.html NOT found"
-          fi
-          echo ""
-          echo "=== Checking .nojekyll ==="
-          if [ -f .nojekyll ]; then
-            echo "✓ .nojekyll found (Jekyll disabled)"
-          else
-            echo "✗ .nojekyll NOT found"
-          fi
-          echo ""
-          echo "=== Artifacts directory ==="
-          ls -la artifacts/ 2>/dev/null || echo "artifacts/ directory not found"
-
-      - name: Verify index.html exists
-        run: |
-          if [ ! -f index.html ]; then
-            echo "Error: index.html not found!"
-            exit 1
-          fi
-          echo "index.html found - ready for deployment"
+          echo "=== Screenshots ==="
+          ls -la artifacts/screenshots/ | head -10
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
           static_site_generator: disable
 
-      - name: Upload artifact
+      - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: .
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
+        id: deployment
+        uses: actions/deploy-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
-          cname: ""
+          artifact_name: github-pages
 
